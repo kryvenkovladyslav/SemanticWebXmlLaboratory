@@ -45,7 +45,7 @@ namespace SemanticWebLaboratory
 
 
 
-            XmlSchema schema = new XmlSchema();
+            /*XmlSchema schema = new XmlSchema();
 
             schema.Items.Add(new XmlSchemaElement { Name = "transaction", SchemaTypeName = new XmlQualifiedName("transactionType") });
 
@@ -70,7 +70,62 @@ namespace SemanticWebLaboratory
             addressSequence.Items.Add(new XmlSchemaElement { Name = "city", SchemaTypeName = new XmlQualifiedName("xs:string") });
             addressSequence.Items.Add(new XmlSchemaElement { Name = "state", SchemaTypeName = new XmlQualifiedName("xs:NMTOKEN") });
             address.Particle = sequacne;
-            schema.Items.Add(address);
+            schema.Items.Add(address);*/
+
+
+            /*  public string Name { get; set; }
+         public decimal Price { get; set; }
+         public double WeightGM { get; set; }
+         public string Strength { get; set; }
+         public string Country { get; set; }
+         public string Manufacturer { get; set; }
+         public string Leaf { get; set; }
+         public bool isAvailable { get; set; }
+         */
+
+            var xmlNamespace = "http://www.w3.org/2001/XMLSchema";
+
+            var rootElement = new XmlSchemaElement();
+            rootElement.Name = "Tobaccos";
+
+            var nameAttribute = new XmlSchemaAttribute();
+            nameAttribute.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            nameAttribute.Use = XmlSchemaUse.Required;
+            nameAttribute.Name = "Name";
+
+            var priceElement = new XmlSchemaElement();
+            priceElement.SchemaTypeName = new XmlQualifiedName("decimal", xmlNamespace);
+            priceElement.Name = "Price";
+
+            var weightGMElement = new XmlSchemaElement();
+            weightGMElement.SchemaTypeName = new XmlQualifiedName("decimal", xmlNamespace);
+            weightGMElement.Name = "WeightGM";
+
+            var strengthElement = new XmlSchemaElement();
+            strengthElement.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            strengthElement.Name = "Strength";
+
+            var countryElement = new XmlSchemaElement();
+            countryElement.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            countryElement.Name = "Country";
+
+            var manufacturerElement = new XmlSchemaElement();
+            manufacturerElement.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            manufacturerElement.Name = "Manufacturer";
+
+            var leafElement = new XmlSchemaElement();
+            leafElement.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            leafElement.Name = "Leaf";
+
+            var isAvailableElement = new XmlSchemaElement();
+            isAvailableElement.SchemaTypeName = new XmlQualifiedName("boolean", xmlNamespace);
+            isAvailableElement.Name = "IsAvailable";
+
+
+
+
+
+
 
 
 
@@ -100,7 +155,7 @@ namespace SemanticWebLaboratory
             Console.WriteLine("Результат записис в xml: " + xmlWritingResult);*/
 
 
-           
+
 
 
         }
@@ -119,7 +174,7 @@ namespace SemanticWebLaboratory
                     new XElement(nameof(tobacco.Country), tobacco.Country),
                     new XElement(nameof(tobacco.Manufacturer), tobacco.Manufacturer),
                     new XElement(nameof(tobacco.Leaf), tobacco.Leaf),
-                    new XElement(nameof(tobacco.isAvailable), tobacco.isAvailable));
+                    new XElement(nameof(tobacco.IsAvailable), tobacco.IsAvailable));
                 xElement.Add(new XAttribute(nameof(tobacco.Name), tobacco.Name));
 
                 root.Add(xElement);
@@ -141,7 +196,7 @@ namespace SemanticWebLaboratory
                 {
                     stream.WriteLine(tobacco.Name);
                     stream.WriteLine(tobacco.Price);
-                    stream.WriteLine(tobacco.isAvailable);
+                    stream.WriteLine(tobacco.IsAvailable);
                     stream.WriteLine(tobacco.Country);
                     stream.WriteLine(tobacco.Leaf);
                     stream.WriteLine(tobacco.Manufacturer);

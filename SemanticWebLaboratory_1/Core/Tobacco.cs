@@ -6,6 +6,7 @@ namespace SemanticWebXmlLaboratory.Core
     [Serializable]
     public sealed class Tobacco
     {
+        
         public string Name { get; set; }
         public decimal Price { get; set; }
         public double WeightGM { get; set; }
@@ -13,7 +14,7 @@ namespace SemanticWebXmlLaboratory.Core
         public string Country { get; set; }
         public string Manufacturer { get; set; }
         public string Leaf { get; set; }
-        public bool isAvailable { get; set; }
+        public bool IsAvailable { get; set; }
 
         public Tobacco() { }
         
@@ -23,7 +24,7 @@ namespace SemanticWebXmlLaboratory.Core
             stringBuilder
                 .Append("Name: " + Name + "\n")
                 .Append("Price: " + Price + "\n")
-                .Append("IsAvailable: " + isAvailable + "\n")
+                .Append("IsAvailable: " + IsAvailable + "\n")
                 .Append("Weight (gm): " + WeightGM + "\n")
                 .Append("Strength: " + Strength + "\n")
                 .Append("Leaf: " + Leaf + "\n")
