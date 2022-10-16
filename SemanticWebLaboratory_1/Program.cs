@@ -25,8 +25,10 @@ namespace SemanticWebLaboratory
             var nameSelector = "h1";
             var stateSelector = "div.status-text-available";
             var propertySelector = "property-content";
-            var xmlPath = "Products.xml";
-            var filePath = "Products.txt";
+
+            var xmlPath = @".\ProductsDirectory\Products.xml";
+            var filePath = @".\ProductsDirectory\Products.txt";
+            var xmlSchemaPath = @".\ProductsDirectory\Products.xsd";
 
             string[] tobaccoUrls =
             {
@@ -42,54 +44,73 @@ namespace SemanticWebLaboratory
                 "https://duman.com.ua/product/tabak-smoke-mafia-cola-smouk-mafiya-kola-na-ves-20g",
             };
 
+            foreach (var url in tobaccoUrls)
+            {
+                using (var document = await context.OpenAsync(url))
+                {
+                    var product = SemanticWebXmlLaboratory.Parser.ParseIntoTobacco(document, nameSelector, stateSelector, propertySelector);
+                    Repository<Tobacco>.Add(product);
+                }
+            }
 
 
+            var writingResult = WriteProductsDataIntoFile(filePath, Repository<Tobacco>.Items);
+            Console.WriteLine("Result of writing data into text file: " + writingResult);
 
-            /*XmlSchema schema = new XmlSchema();
+            var xmlDocument = GenerateProductXml(Repository<Tobacco>.Items);
+            var generatingXmlDocumentResult = SaveXmlDocument(xmlPath, xmlDocument);
+            Console.WriteLine("Result of generating XML Document: " + generatingXmlDocumentResult);;
 
-            schema.Items.Add(new XmlSchemaElement { Name = "transaction", SchemaTypeName = new XmlQualifiedName("transactionType") });
-
-            XmlSchemaComplexType complexType = new XmlSchemaComplexType { Name = "transactionType" };
-            complexType.Attributes.Add(new XmlSchemaAttribute() { Name = "borrowDate", SchemaTypeName = new XmlQualifiedName("xs:date") });
-
-            XmlSchemaSequence sequacne = new XmlSchemaSequence();
-            sequacne.Items.Add(new XmlSchemaElement { Name = "Lender", SchemaTypeName = new XmlQualifiedName("address") });
-            sequacne.Items.Add(new XmlSchemaElement { Name = "Borrower", SchemaTypeName = new XmlQualifiedName("address") });
-            sequacne.Items.Add(new XmlSchemaElement { Name = "Books", SchemaTypeName = new XmlQualifiedName("books") });
-            complexType.Particle = sequacne;
-            schema.Items.Add(complexType);
-
-            XmlSchemaElement newElement = new XmlSchemaElement { Name = "note", SchemaTypeName = new XmlQualifiedName("xs:string") };
-            schema.Items.Add(newElement);
-
-            XmlSchemaComplexType address = new XmlSchemaComplexType { Name = "address" };
-            address.Attributes.Add(new XmlSchemaAttribute { Name = "phone", SchemaTypeName = new XmlQualifiedName("xs:string"), Use = XmlSchemaUse.Optional });
-            XmlSchemaSequence addressSequence = new XmlSchemaSequence();
-            addressSequence.Items.Add(new XmlSchemaElement { Name = "name", SchemaTypeName = new XmlQualifiedName("xs:string") });
-            addressSequence.Items.Add(new XmlSchemaElement { Name = "street", SchemaTypeName = new XmlQualifiedName("xs:string") });
-            addressSequence.Items.Add(new XmlSchemaElement { Name = "city", SchemaTypeName = new XmlQualifiedName("xs:string") });
-            addressSequence.Items.Add(new XmlSchemaElement { Name = "state", SchemaTypeName = new XmlQualifiedName("xs:NMTOKEN") });
-            address.Particle = sequacne;
-            schema.Items.Add(address);*/
+            var xmlSchema = GenerateXmlSchema();
+            var generatingXmlSchemaResult = SaveXmlSchema(xmlSchemaPath, xmlSchema);
+            Console.WriteLine("Result of generating XML Shema: " + generatingXmlSchemaResult);
 
 
-            /*  public string Name { get; set; }
-         public decimal Price { get; set; }
-         public double WeightGM { get; set; }
-         public string Strength { get; set; }
-         public string Country { get; set; }
-         public string Manufacturer { get; set; }
-         public string Leaf { get; set; }
-         public bool isAvailable { get; set; }
-         */
+            XmlSchemaSet schemaSet = new XmlSchemaSet();
+            schemaSet.ValidationEventHandler += new ValidationEventHandler(ValidationCallback);
+            schemaSet.Add(xmlSchema);
+            schemaSet.Compile();
 
+            XmlReaderSettings xmlReaderSettings = new XmlReaderSettings();
+            xmlReaderSettings.ValidationType = ValidationType.Schema;
+            xmlReaderSettings.Schemas = schemaSet;
+
+            XmlReader xmlReader = XmlReader.Create(xmlPath, xmlReaderSettings);
+            while (xmlReader.Read());
+            Console.WriteLine("Document is valid!");
+
+        }
+
+        private static void ValidationCallback(object sender, ValidationEventArgs args)
+        {
+            if (args.Severity == XmlSeverityType.Warning)
+                Console.Write("WARNING: ");
+            else if (args.Severity == XmlSeverityType.Error)
+                Console.Write("ERROR: ");
+
+            Console.WriteLine(args.Message);
+        }
+
+        private static XmlSchema GenerateXmlSchema()
+        {
             var xmlNamespace = "http://www.w3.org/2001/XMLSchema";
+            var modelNamespace = "https://duman.com.ua/0";
 
-            var rootElement = new XmlSchemaElement();
-            rootElement.Name = "Tobaccos";
+            var tobaccosRootElement = new XmlSchemaElement();
+            tobaccosRootElement.Name = "Tobaccos";
+
+            var tobaccoNameSimpleType = new XmlSchemaSimpleType();
+            tobaccoNameSimpleType.Name = "TobaccoName";
+            var tobaccoNameSimpleTypeRestriction = new XmlSchemaSimpleTypeRestriction();
+            tobaccoNameSimpleTypeRestriction.BaseTypeName = new XmlQualifiedName("string", xmlNamespace);
+            var facet = new XmlSchemaMaxLengthFacet();
+            facet.Value = "1000";
+            tobaccoNameSimpleTypeRestriction.Facets.Add(facet);
+            tobaccoNameSimpleType.Content = tobaccoNameSimpleTypeRestriction;
+
 
             var nameAttribute = new XmlSchemaAttribute();
-            nameAttribute.SchemaTypeName = new XmlQualifiedName("string", xmlNamespace);
+            nameAttribute.SchemaTypeName = new XmlQualifiedName("TobaccoName", modelNamespace);
             nameAttribute.Use = XmlSchemaUse.Required;
             nameAttribute.Name = "Name";
 
@@ -98,7 +119,7 @@ namespace SemanticWebLaboratory
             priceElement.Name = "Price";
 
             var weightGMElement = new XmlSchemaElement();
-            weightGMElement.SchemaTypeName = new XmlQualifiedName("decimal", xmlNamespace);
+            weightGMElement.SchemaTypeName = new XmlQualifiedName("short", xmlNamespace);
             weightGMElement.Name = "WeightGM";
 
             var strengthElement = new XmlSchemaElement();
@@ -121,45 +142,45 @@ namespace SemanticWebLaboratory
             isAvailableElement.SchemaTypeName = new XmlQualifiedName("boolean", xmlNamespace);
             isAvailableElement.Name = "IsAvailable";
 
+            var tobaccoComplexType = new XmlSchemaComplexType();
+            var tobaccoElementSequence = new XmlSchemaSequence();
 
+            tobaccoElementSequence.Items.Add(priceElement);
+            tobaccoElementSequence.Items.Add(weightGMElement);
+            tobaccoElementSequence.Items.Add(strengthElement);
+            tobaccoElementSequence.Items.Add(countryElement);
+            tobaccoElementSequence.Items.Add(manufacturerElement);
+            tobaccoElementSequence.Items.Add(leafElement);
+            tobaccoElementSequence.Items.Add(isAvailableElement);
 
+            tobaccoComplexType.Particle = tobaccoElementSequence;
+            tobaccoComplexType.Attributes.Add(nameAttribute);
 
+            var tobaccoElement = new XmlSchemaElement();
+            tobaccoElement.Name = "Tobacco";
+            tobaccoElement.MinOccurs = 0;
+            tobaccoElement.MaxOccurs = 200;
+            tobaccoElement.SchemaType = tobaccoComplexType;
 
+            var tobaccosRootElementComplexType = new XmlSchemaComplexType();
+            var tobaccosRootElementSequence = new XmlSchemaSequence();
 
+            tobaccosRootElementSequence.Items.Add(tobaccoElement);
+            tobaccosRootElementComplexType.Particle = tobaccosRootElementSequence;
 
+            tobaccosRootElement.SchemaType = tobaccosRootElementComplexType;
 
+            var xmlSchema = new XmlSchema();
+            xmlSchema.TargetNamespace = modelNamespace;
+            xmlSchema.Items.Add(tobaccosRootElement);
+            xmlSchema.Items.Add(tobaccoNameSimpleType);
+            xmlSchema.AttributeFormDefault = XmlSchemaForm.Unqualified;
+            xmlSchema.ElementFormDefault = XmlSchemaForm.Unqualified;
 
-
-
-
-
-            /*foreach (var url in tobaccoUrls)
-            {
-                using (var document = await context.OpenAsync(url))
-                {
-                    var product = SemanticWebXmlLaboratory.Parser.ParseIntoTobacco(document, nameSelector, stateSelector, propertySelector);
-                    Repository<Tobacco>.Add(product);
-                }
-            }
-
-            foreach (var tobacco in Repository<Tobacco>.Items)
-            {
-                Console.WriteLine(tobacco);
-            }
-
-            var writingResult = WriteProductsDataIntoFile(filePath, Repository<Tobacco>.Items);
-            var xmlWritingResult = SaveProductsDataAsXml(xmlPath, Repository<Tobacco>.Items);
-
-
-            Console.WriteLine("\nРезультат записи в текстовый файл: " + writingResult);
-            Console.WriteLine("Результат записис в xml: " + xmlWritingResult);*/
-
-
-
-
-
+            return xmlSchema;
         }
-        public static bool SaveProductsDataAsXml(string path, List<Tobacco> tobaccos)
+       
+        private static XDocument GenerateProductXml(List<Tobacco> tobaccos)
         {
             var root = new XElement("Tobaccos");
             var xmlDocument = new XDocument(root);
@@ -180,7 +201,10 @@ namespace SemanticWebLaboratory
                 root.Add(xElement);
             }
 
-
+            return xmlDocument;
+        }
+        private static bool SaveXmlDocument(string path, XDocument xmlDocument)
+        {
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
             {
                 xmlDocument.Save(stream);
@@ -188,7 +212,16 @@ namespace SemanticWebLaboratory
 
             return File.Exists(path);
         }
-        public static bool WriteProductsDataIntoFile(string path, List<Tobacco> tobaccos)
+        private static bool SaveXmlSchema(string path, XmlSchema xmlSchema)
+        {
+            using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
+            {
+                xmlSchema.Write(stream);
+            }
+
+            return File.Exists(path);
+        }
+        private static bool WriteProductsDataIntoFile(string path, List<Tobacco> tobaccos)
         {
             using (var stream = File.CreateText(path))
             {

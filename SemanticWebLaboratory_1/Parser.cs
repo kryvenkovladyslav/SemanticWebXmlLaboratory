@@ -24,7 +24,7 @@ namespace SemanticWebXmlLaboratory
 
             tobacco.Name = RecivedStringValidOrEmpty(doucment.QuerySelector(nameSelector));
 
-            tobacco.isAvailable = ParseStringFieldIntoBoolean(RecivedStringValidOrEmpty(doucment.QuerySelector(statusSelector)));
+            tobacco.IsAvailable = ParseStringFieldIntoBoolean(RecivedStringValidOrEmpty(doucment.QuerySelector(statusSelector)));
 
             tobacco.Price = random.Next(100, 470);
 
